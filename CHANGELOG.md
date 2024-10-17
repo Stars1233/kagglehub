@@ -1,20 +1,29 @@
 # Changelog
 
-## Next (Unreleased)
+## v0.3.3 (October 17th, 2024)
 
-## v.0.3.1 (October 1st, 2024)
+* Hide API key in terminal when prompting in `kaggle.login(...)` ([#173](https://github.com/Kaggle/kagglehub/pull/173))
+* Reduce logging spam when using `force_download` in Kaggle notebook environment ([#172](https://github.com/Kaggle/kagglehub/pull/172))
+
+## v0.3.2 (October 15th, 2024)
+
+* Fallback to next auth mechanism if auth environment variables are set but empty ([#168](https://github.com/Kaggle/kagglehub/pull/168))
+* `kaggle.whoami()` returns proper value in Kaggle Notebook environment ([#166](https://github.com/Kaggle/kagglehub/pull/166))
+* `kaggle.whoami()` returns proper value when using Colab secrets ([#165](https://github.com/Kaggle/kagglehub/pull/165))
+
+## v0.3.1 (October 1st, 2024)
 
 * Attach competition in Kaggle notebook environment ([#161](https://github.com/Kaggle/kagglehub/pull/161))
 * Download competition using `kagglehub.competition_download(...)` ([#158](https://github.com/Kaggle/kagglehub/pull/158))
 * Enable authorization via Colab secrets ([#157](https://github.com/Kaggle/kagglehub/pull/157))
 
-## v.0.3.0 (September 4th, 2024)
+## v0.3.0 (September 4th, 2024)
 
 * Integrate Keras metrics ([#152](https://github.com/Kaggle/kagglehub/pull/152))
 * Enhance logging messages ([#151](https://github.com/Kaggle/kagglehub/pull/151))
 * Upgrade Python version support to 3.9 and above ([#154](https://github.com/Kaggle/kagglehub/pull/154))
 
-## v.0.2.9 (July 31st, 2024)
+## v0.2.9 (July 31st, 2024)
 
 * Improve upload by ignoring patterns ([#147](https://github.com/Kaggle/kagglehub/pull/147))
 * Upload with empty files ([#145](https://github.com/Kaggle/kagglehub/pull/145))
@@ -22,15 +31,15 @@
 * Upload datasets using `kagglehub.dataset_upload(...)` ([#149](https://github.com/Kaggle/kagglehub/pull/149))
 * Download datasets using `kagglehub.dataset_download(...)` ([#131](https://github.com/Kaggle/kagglehub/pull/131))
 
-## v.0.2.8 (July 16th, 2024)
+## v0.2.8 (July 16th, 2024)
 
 * Added support for implicit token auth in kaggle notebooks ([#141](https://github.com/Kaggle/kagglehub/pull/141))
 * Improve logging for cached models in Kaggle & Colab environments ([#142](https://github.com/Kaggle/kagglehub/pull/142))
 
-## v.0.2.7 (July 1st, 2024)
+## v0.2.7 (July 1st, 2024)
 * Fix model downloading bug
 
-## v.0.2.6 (June 10th, 2024)
+## v0.2.6 (June 10th, 2024)
 
 * Add support for `.zip` archive ([#135](https://github.com/Kaggle/kagglehub/pull/135))
 * Reduce spammy logging ([#124](https://github.com/Kaggle/kagglehub/pull/124))
@@ -69,25 +78,25 @@
 * Fix message when detecting newer version ([#82](https://github.com/Kaggle/kagglehub/pull/82))
 * Link to model detail page in errors(Colab resolver) ([#83](https://github.com/Kaggle/kagglehub/pull/83))
 
-## v0.1.8 (January 31st, 2023)
+## v0.1.8 (January 31st, 2024)
 
 * Include URL to model detail page in error message ([#80](https://github.com/Kaggle/kagglehub/pull/80))
 * Add Kaggle/Colab to user-agent if running on these environment ([#78](https://github.com/Kaggle/kagglehub/pull/78))
 * Improve logging for Colab resolver ([#77](https://github.com/Kaggle/kagglehub/pull/77))
 
-## v0.1.7 (January 29th, 2023)
+## v0.1.7 (January 29th, 2024)
 
 * Fix `model_upload` with nested directory ([#75](https://github.com/Kaggle/kagglehub/pull/75))
 * Detect if a newer version of `kagglehub` is available and suggest to upgrade ([#73](https://github.com/Kaggle/kagglehub/pull/73))
 
-## v0.1.6 (January 22nd, 2023)
+## v0.1.6 (January 22nd, 2024)
 
 * Fix permission issue in `model_upload` and add integration tests ([#69](https://github.com/Kaggle/kagglehub/pull/69))
 * Make specifying a license optional in `model_upload` ([#62](https://github.com/Kaggle/kagglehub/pull/62))
 * Improve logging ([#68](https://github.com/Kaggle/kagglehub/pull/68), [#71](https://github.com/Kaggle/kagglehub/pull/71))
 * Add resumable upload ([#55](https://github.com/Kaggle/kagglehub/pull/55))
 
-## v0.1.5 (January 8th, 2023)
+## v0.1.5 (January 8th, 2024)
 
 * Prevent log message from being printed twice in some environment ([#57](https://github.com/Kaggle/kagglehub/pull/57))
 * Add Colab model resolver ([#53](https://github.com/Kaggle/kagglehub/pull/53))
