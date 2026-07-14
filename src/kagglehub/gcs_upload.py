@@ -5,6 +5,7 @@ import pathlib
 import time
 import zipfile
 from collections.abc import Iterable, Sequence
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from tempfile import TemporaryDirectory
 
@@ -24,6 +25,7 @@ MAX_FILES_TO_UPLOAD = 50
 TEMP_ARCHIVE_FILE = "archive.zip"
 MAX_RETRIES = 5
 REQUEST_TIMEOUT = 600
+MAX_PARALLEL_UPLOADS = 8
 
 
 class UploadDirectoryInfo:
@@ -48,6 +50,24 @@ class UploadDirectoryInfo:
         d.directories = [d.to_proto() for d in self.directories]
 
         return d
+
+
+def _get_or_create_upload_directory(root: UploadDirectoryInfo, path: str) -> UploadDirectoryInfo:
+    current = root
+    if path == ".":
+        return current
+
+    for part in path.split(os.sep):
+        for subdir in current.directories:
+            if subdir.name == part:
+                current = subdir
+                break
+        else:
+            new_dir = UploadDirectoryInfo(name=part)
+            current.directories.append(new_dir)
+            current = new_dir
+
+    return current
 
 
 def parse_datetime_string(string: str) -> datetime | str:
@@ -209,44 +229,41 @@ def upload_files_and_directories(
                         file_path = os.path.join(root, file)
                         zipf.write(file_path, os.path.relpath(file_path, folder))
 
-            tokens = [
+            archive_tokens = [
                 token
                 for token in [_upload_file(file_path=zip_path, item_type=item_type, quiet=quiet)]
                 if token is not None
             ]
-            return UploadDirectoryInfo(name="archive", files=tokens)
+            return UploadDirectoryInfo(name="archive", files=archive_tokens)
 
-    root_dict = UploadDirectoryInfo(name="root")
     if os.path.isfile(folder):
+        root_dict = UploadDirectoryInfo(name="root")
         # Directly upload the file if the path is a file
         token = _upload_file(file_path=folder, item_type=item_type, quiet=quiet)
         if token:
             root_dict.files.append(token)
     else:
+        root_dict = UploadDirectoryInfo(name="root")
+        files_to_upload = []
         for root, _, files in filtered_walk(base_dir=folder, ignore_patterns=ignore_patterns):
             # Path of the current folder relative to the base folder
             path = os.path.relpath(root, folder)
 
-            # Navigate or create the dictionary path to the current folder
-            current_dict = root_dict
-            if path != ".":
-                for part in path.split(os.sep):
-                    # Find or create the subdirectory in the current dictionary
-                    for subdir in current_dict.directories:
-                        if subdir.name == part:
-                            current_dict = subdir
-                            break
-                    else:
-                        # If the directory is not found, create a new one
-                        new_dir = UploadDirectoryInfo(name=part)
-                        current_dict.directories.append(new_dir)
-                        current_dict = new_dir
-
-            # Add file tokens to the current directory in the dictionary
+            # Build the directory structure before parallel uploads so only the main thread mutates it.
+            current_dict = _get_or_create_upload_directory(root_dict, path)
             for file in files:
-                token = _upload_file(file_path=os.path.join(root, file), item_type=item_type, quiet=quiet)
-                if token:
-                    current_dict.files.append(token)
+                files_to_upload.append((current_dict, os.path.join(root, file)))
+
+        if files_to_upload:
+            max_workers = min(MAX_PARALLEL_UPLOADS, len(files_to_upload))
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                upload_tokens = executor.map(
+                    lambda item: _upload_file(file_path=item[1], item_type=item_type, quiet=quiet),
+                    files_to_upload,
+                )
+                for (current_dict, _), token in zip(files_to_upload, upload_tokens, strict=False):
+                    if token:
+                        current_dict.files.append(token)
 
     return root_dict
 

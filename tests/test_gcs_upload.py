@@ -2,8 +2,13 @@
 
 import pathlib
 import tempfile
+import threading
+import time
+from unittest import mock
 
-from kagglehub.gcs_upload import filtered_walk, normalize_patterns
+from kagglesdk.blobs.types.blob_api_service import ApiBlobType
+
+from kagglehub.gcs_upload import filtered_walk, normalize_patterns, upload_files_and_directories
 from tests.fixtures import BaseTestCase
 
 
@@ -61,3 +66,35 @@ class TesModelsHelpers(BaseTestCase):
                 for file_name in file_names:
                     walked_files.append(pathlib.Path(dir_path) / file_name)
             self.assertEqual(set(walked_files), expected_files)
+
+    def test_upload_files_and_directories_uploads_files_in_parallel(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            tmp_dir_p = pathlib.Path(tmp_dir)
+            for file_name in ["a.txt", "b.txt", "c.txt"]:
+                (tmp_dir_p / file_name).touch()
+
+            lock = threading.Lock()
+            active_uploads = 0
+            max_active_uploads = 0
+
+            def fake_upload_file(file_path: str, *, quiet: bool, item_type: ApiBlobType) -> str:
+                nonlocal active_uploads, max_active_uploads
+                _ = quiet, item_type
+                with lock:
+                    active_uploads += 1
+                    max_active_uploads = max(max_active_uploads, active_uploads)
+                time.sleep(0.05)
+                with lock:
+                    active_uploads -= 1
+                return pathlib.Path(file_path).name
+
+            with mock.patch("kagglehub.gcs_upload._upload_file", side_effect=fake_upload_file):
+                upload_dir = upload_files_and_directories(
+                    tmp_dir,
+                    ignore_patterns=[],
+                    item_type=ApiBlobType.DATASET,
+                    quiet=True,
+                )
+
+            self.assertGreater(max_active_uploads, 1)
+            self.assertCountEqual(upload_dir.files, ["a.txt", "b.txt", "c.txt"])
